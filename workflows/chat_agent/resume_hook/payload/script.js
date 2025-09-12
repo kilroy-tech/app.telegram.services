@@ -120,7 +120,7 @@ function postflight(authData, wfProxy) {
             global.REBAR_NAMESPACE.__telegram = {};
         }
         //try to open up a new bot for this pd_alias
-        let wha = wfProxy.getGlobalValue ("webhook_args");
+        let wha = wfProxy.getGlobalValue ("ta_config"); //was webhook_args
         debug (`wha: ${JSON.stringify (wha, null, 4)}`);
         
         let ta_alias = wha.agent_alias || wfProxy.getGlobalValue ("ta_alias") || "undefined_bot";

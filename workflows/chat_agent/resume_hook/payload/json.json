@@ -35,12 +35,49 @@
                         "operation": "set_var_to",
                         "isServer": true,
                         "args": {
-                            "var_name": "recswarm",
+                            "var_name": "method",
                             "push_array_name": null,
                             "field_name": null,
                             "var_expr": {
                                 "type": "object",
                                 "arg": "webhook_args",
+                                "field_name": "method"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "if_then_else",
+                        "isServer": true,
+                        "args": {
+                            "condition": "\"${method}\" != \"resume\"",
+                            "success": [
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "ta_config",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "variable",
+                                            "arg": "webhook_args"
+                                        }
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "recswarm",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "ta_config",
                                 "field_name": "agent_rec_swarm"
                             }
                         }
@@ -54,7 +91,7 @@
                             "field_name": null,
                             "var_expr": {
                                 "type": "object",
-                                "arg": "webhook_args",
+                                "arg": "ta_config",
                                 "field_name": "agent_send_swarm"
                             }
                         }
@@ -68,7 +105,7 @@
                             "field_name": null,
                             "var_expr": {
                                 "type": "object",
-                                "arg": "webhook_args",
+                                "arg": "ta_config",
                                 "field_name": "agent_alias"
                             }
                         }
