@@ -1,0 +1,81 @@
+{
+    "name": "telegram.services/chat_agent/stop_hook",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "if_then_else",
+                        "isServer": true,
+                        "args": {
+                            "condition": "${ta_swarm_connected}",
+                            "success": [
+                                {
+                                    "operation": "if_then_else",
+                                    "isServer": true,
+                                    "args": {
+                                        "condition": "\"${ta_rec_swarm}\" != \"${ta_send_swarm}\"",
+                                        "success": [
+                                            {
+                                                "operation": "swarm_command",
+                                                "isServer": true,
+                                                "args": {
+                                                    "command": "leave",
+                                                    "command_args": {
+                                                        "topic": "${ta_send_swarm}"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "failure": []
+                                    }
+                                },
+                                {
+                                    "operation": "swarm_command",
+                                    "isServer": true,
+                                    "args": {
+                                        "command": "leave",
+                                        "command_args": {
+                                            "topic": "${ta_rec_swarm}"
+                                        }
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

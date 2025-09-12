@@ -1,0 +1,149 @@
+{
+    "name": "telegram.services/config/create_chat_agent",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "wfCurrentUserId",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "wfCurrentUserId"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "agent",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "agent"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "pipeline_name",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "pipeline_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "name",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "agent",
+                                "field_name": "agent_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "desc",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "agent",
+                                "field_name": "agent_desc"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "alias",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "agent",
+                                "field_name": "agent_alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "app_services",
+                        "isServer": true,
+                        "args": {
+                            "cmd": "start_app_diagram",
+                            "pdclass": "chat_agent",
+                            "pdalias": "${alias}",
+                            "pddesc": "(${pipeline_name}) CHAT: ${name}: ${desc}",
+                            "pdargs": "{\"config\": ${agent}}"
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "res",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "results",
+                                "arg": "__results__"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

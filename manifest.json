@@ -1,0 +1,40 @@
+{
+    "manifestVersion": 2,
+    "id"            : "telegram.services",
+    "displayName"   : "Telegram Services",
+    "desc"          : "Telegram utility services",
+    "version"       : "1.0.1",
+    "author"        : "Kilroy.tech",
+    "authorInfoUrl" : "http://kilroy.tech",
+    "appInfoUrl"    : "/apps/telegram.services/index.pug",
+    "appImageUrl"   : "/apps/telegram.services/logo.svg",
+    "locked"        : true,
+    "override"      : true,
+    "hidden"        : false,
+    "pdClasses"     : {
+        "config"    : {
+            "pdName" : "config",
+            "pdAlias": "telegram.services.config",
+            "desc"  : " Telegram Services Configuration",
+            "runOnStart": true,
+            "visible": true,
+            "multipleAllowed": false,
+            "init"  : "init_hook",
+            "resume": "resume_hook",
+            "pause" : "pause_hook",
+            "stop"  : "stop_hook"
+        },
+        "chat_agent"    : {
+            "pdName" : "chat_agent",
+            "pdAlias": "telegram.services.chat_agent",
+            "desc"  : "Telegram Chat Agent",
+            "runOnStart": false,
+            "visible": true,
+            "multipleAllowed": true,
+            "init"  : "init_hook",
+            "resume": "resume_hook",
+            "pause" : "pause_hook",
+            "stop"  : "stop_hook"
+        }
+    }
+}

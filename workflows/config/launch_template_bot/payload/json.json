@@ -1,0 +1,374 @@
+{
+    "name": "telegram.services/config/launch_template_bot",
+    "version": "1",
+    "description": "",
+    "isInteractive": true,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_*",
+        "ex_*"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": true,
+                "canTerminate": true,
+                "success": [
+                    {
+                        "operation": "display_inline_form",
+                        "isServer": false,
+                        "args": {
+                            "formID": "picker",
+                            "form": "${formObj}",
+                            "success": [
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "settings",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "app_settings",
+                                            "arg": null
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "template",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "settings",
+                                            "field_name": "${guid}"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "value",
+                                            "arg": {}
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "ta_template_guid",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ta_template_guid"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ta_id",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ta_id"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ta_desc",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ta_desc"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ex_style",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ex_style"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ta_wallet",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ta_wallet"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "vault_basis",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "vault_basis"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "vault_apy_floor",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "vault_apy_floor"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "vault_tvl_floor",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "vault_tvl_floor"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ta_user",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "ta_user"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ex_chat_id",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "chat_id"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "formData",
+                                        "push_array_name": null,
+                                        "field_name": "ex_bot_key",
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "template",
+                                            "field_name": "bot_key"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "display_inline_form",
+                                    "isServer": false,
+                                    "args": {
+                                        "formID": "default",
+                                        "form": {
+                                            "formPanels": [
+                                                {
+                                                    "name": "",
+                                                    "description": "",
+                                                    "sections": [
+                                                        {
+                                                            "fields": [
+                                                                {
+                                                                    "name": "ta_id",
+                                                                    "type": "text",
+                                                                    "label": "Vault ID",
+                                                                    "placeholder": "some_vault_name_from_beefy_url"
+                                                                },
+                                                                {
+                                                                    "name": "ta_desc",
+                                                                    "type": "text",
+                                                                    "label": "Description",
+                                                                    "placeholder": ""
+                                                                },
+                                                                {
+                                                                    "name": "ta_user",
+                                                                    "type": "text",
+                                                                    "label": "Kilroy User/Server",
+                                                                    "placeholder": ""
+                                                                },
+                                                                {
+                                                                    "name": "ta_wallet",
+                                                                    "type": "text",
+                                                                    "label": "Owner Wallet Address",
+                                                                    "placeholder": "0x..."
+                                                                },
+                                                                {
+                                                                    "name": "vault_basis",
+                                                                    "type": "text",
+                                                                    "label": "Basis",
+                                                                    "placeholder": "0"
+                                                                },
+                                                                {
+                                                                    "name": "vault_apy_floor",
+                                                                    "type": "text",
+                                                                    "label": "Vault APY Floor",
+                                                                    "placeholder": "0"
+                                                                },
+                                                                {
+                                                                    "name": "vault_tvl_floor",
+                                                                    "type": "text",
+                                                                    "label": "Vault TVL Floor",
+                                                                    "placeholder": "0"
+                                                                },
+                                                                {
+                                                                    "name": "ex_chat_id",
+                                                                    "type": "text",
+                                                                    "label": "Telegram Chat ID",
+                                                                    "placeholder": "-1234xxx"
+                                                                },
+                                                                {
+                                                                    "name": "ex_bot_key",
+                                                                    "type": "text",
+                                                                    "label": "Telegram Bot Key",
+                                                                    "placeholder": "bot123:XXXXX"
+                                                                },
+                                                                {
+                                                                    "name": "ex_style",
+                                                                    "type": "dropdown",
+                                                                    "label": "Style",
+                                                                    "pairs_as_string": true,
+                                                                    "pairs": "[  {\"name\" : \"Light\", \"value\" : 0 },{\"name\" : \"Dark\", \"value\" : 1 },{\"name\" : \"Dim\", \"value\" : 2 }]"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "success": [
+                                            {
+                                                "operation": "app_services",
+                                                "isServer": true,
+                                                "args": {
+                                                    "cmd": "start_app_diagram",
+                                                    "pdclass": "vault",
+                                                    "pdalias": "",
+                                                    "pddesc": "${ta_desc}",
+                                                    "pdargs": "{\"ta_id\":\"${ta_id}\",\"ta_desc\":\"${ta_desc}\",\"ta_user\":\"${ta_user}\",\"ta_wallet\":\"${ta_wallet}\",\"vault_tvl_floor\":\"${vault_tvl_floor}\",\"vault_apy_floor\":\"${vault_apy_floor}\",\"vault_basis\":\"${vault_basis}\",\"ta_template_guid\":\"${ta_template_guid}\",\"ex_style\":\"${ex_style}\",\"chat_id\":\"${ex_chat_id}\",\"bot_key\":\"${ex_bot_key}\"}"
+                                                }
+                                            },
+                                            {
+                                                "operation": "set_var_to",
+                                                "isServer": true,
+                                                "args": {
+                                                    "var_name": "res",
+                                                    "push_array_name": null,
+                                                    "field_name": null,
+                                                    "var_expr": {
+                                                        "type": "results",
+                                                        "arg": "__results__"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "operation": "app_services",
+                                                "isServer": false,
+                                                "args": {
+                                                    "cmd": "show_app_diagram",
+                                                    "pdalias": "${res}"
+                                                }
+                                            },
+                                            {
+                                                "operation": "set_value",
+                                                "isServer": true,
+                                                "args": {
+                                                    "variable": "ta_msg",
+                                                    "value": "Launched ${ta_id} as ${ta_desc}"
+                                                }
+                                            }
+                                        ],
+                                        "failure": []
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

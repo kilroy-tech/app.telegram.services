@@ -1,0 +1,225 @@
+{
+    "name": "telegram.services/chat_agent/swarm_send_hook",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_msg"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_msg",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "json_string",
+                                "arg": {
+                                    "type": "variable",
+                                    "arg": "webhook_args"
+                                },
+                                "formatted": true
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "text",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "text"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "data",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": {}
+                            }
+                        }
+                    },
+                    {
+                        "operation": "list_reset",
+                        "isServer": true,
+                        "args": {
+                            "list_name": "args"
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "data",
+                            "push_array_name": null,
+                            "field_name": "from",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_agent_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "data",
+                            "push_array_name": null,
+                            "field_name": "id",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "payload",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": {}
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "payload",
+                            "push_array_name": null,
+                            "field_name": "timestamp",
+                            "var_expr": {
+                                "type": "current_time",
+                                "arg": "X"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "payload",
+                            "push_array_name": null,
+                            "field_name": "type",
+                            "var_expr": {
+                                "type": "value",
+                                "arg": "text/plain"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "payload",
+                            "push_array_name": null,
+                            "field_name": "text",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "text"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "payload",
+                            "push_array_name": null,
+                            "field_name": "username",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "wf_username"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": null,
+                            "push_array_name": "args",
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "payload"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "data",
+                            "push_array_name": null,
+                            "field_name": "args",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "args"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "swarm_command",
+                        "isServer": true,
+                        "args": {
+                            "command": "publish",
+                            "command_args": {
+                                "topic": "${ta_send_swarm}",
+                                "data": {
+                                    "type": "variable",
+                                    "arg": "data"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

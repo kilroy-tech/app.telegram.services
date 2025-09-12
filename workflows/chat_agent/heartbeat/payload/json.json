@@ -1,0 +1,117 @@
+{
+    "name": "telegram.services/chat_agent/heartbeat",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_last_update"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "if_then_else",
+                        "isServer": true,
+                        "args": {
+                            "condition": "${ta_swarm_connected}",
+                            "success": [
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "ticks",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "object",
+                                            "arg": "webhook_args",
+                                            "field_name": "data"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "if_then_else",
+                                    "isServer": true,
+                                    "args": {
+                                        "condition": "${ticks}>${ta_last_update}",
+                                        "success": [
+                                            {
+                                                "operation": "trigger_pd",
+                                                "isServer": true,
+                                                "args": {
+                                                    "pd_id": "${process_diagram_id}",
+                                                    "trigger_name": "refresh_info",
+                                                    "sync": false,
+                                                    "copyOutputs": false,
+                                                    "args": "${webhook_args}"
+                                                }
+                                            },
+                                            {
+                                                "operation": "set_var_to",
+                                                "isServer": true,
+                                                "args": {
+                                                    "var_name": "ta_last_update",
+                                                    "push_array_name": null,
+                                                    "field_name": null,
+                                                    "var_expr": {
+                                                        "type": "math",
+                                                        "operator": "add",
+                                                        "op_1": {
+                                                            "type": "variable",
+                                                            "arg": "ticks"
+                                                        },
+                                                        "op_2": {
+                                                            "type": "math",
+                                                            "operator": "multiply",
+                                                            "op_1": {
+                                                                "type": "variable",
+                                                                "arg": "ta_check_interval"
+                                                            },
+                                                            "op_2": {
+                                                                "type": "value",
+                                                                "arg": "1000"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "failure": []
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

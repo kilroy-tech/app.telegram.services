@@ -1,0 +1,147 @@
+{
+    "name": "telegram.services/config/init_hook",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "pd_alias",
+        "ex_*",
+        "ta_*"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "settings",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "app_settings",
+                                "arg": null
+                            }
+                        }
+                    },
+                    {
+                        "operation": "app_services",
+                        "isServer": true,
+                        "args": {
+                            "cmd": "save_app_settings",
+                            "settings": {
+                                "type": "variable",
+                                "arg": "settings"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "pd_alias",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ex_style",
+                            "value": "2"
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_api_key",
+                            "value": ""
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_chat_id",
+                            "value": "0"
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_agent_name",
+                            "value": ""
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_swarm",
+                            "value": ""
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_use_markdown",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": true
+                            }
+                        }
+                    },
+                    {
+                        "operation": "trigger_pd",
+                        "isServer": true,
+                        "args": {
+                            "pd_id": "${process_diagram_id}",
+                            "trigger_name": "set_style",
+                            "sync": true,
+                            "copyOutputs": true,
+                            "args": "{\"ex_style\":\"${ex_style}\"}"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

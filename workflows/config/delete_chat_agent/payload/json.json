@@ -1,0 +1,91 @@
+{
+    "name": "telegram.services/config/delete_chat_agent",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "wfCurrentUserId",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "wfCurrentUserId"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "agent",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "agent"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "alias",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "agent",
+                                "field_name": "agent_alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "app_services",
+                        "isServer": true,
+                        "args": {
+                            "cmd": "stop_app_diagram",
+                            "pdalias": "${alias}"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

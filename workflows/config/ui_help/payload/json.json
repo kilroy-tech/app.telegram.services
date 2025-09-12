@@ -1,0 +1,49 @@
+{
+    "name": "telegram.services/config/ui_help",
+    "version": "1",
+    "description": "",
+    "isInteractive": true,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": true,
+                "canTerminate": true,
+                "success": [
+                    {
+                        "operation": "show_url",
+                        "isServer": false,
+                        "args": {
+                            "url": "/apps/telegram.services/index.html",
+                            "target": "NEW"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

@@ -1,0 +1,363 @@
+{
+    "name": "telegram.services/chat_agent/ui_settings",
+    "version": "1",
+    "description": "",
+    "isInteractive": true,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_*",
+        "ex_*"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": true,
+                "canTerminate": true,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": {}
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_desc",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_desc"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ex_style",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ex_style"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_base_url",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_base_url"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_command",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_command"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_count",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_count"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_simple_flag",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_simple_flag"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_arg",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_arg"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_check_interval",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_check_interval"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_swarm",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_swarm"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_agent_name",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_agent_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "old_swarm",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_swarm"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "display_inline_form",
+                        "isServer": false,
+                        "args": {
+                            "formID": "default",
+                            "form": {
+                                "formPanels": [
+                                    {
+                                        "name": "Settings",
+                                        "description": "",
+                                        "sections": [
+                                            {
+                                                "fields": [
+                                                    {
+                                                        "name": "ta_desc",
+                                                        "type": "text",
+                                                        "label": "Description",
+                                                        "placeholder": "0"
+                                                    },
+                                                    {
+                                                        "name": "ex_style",
+                                                        "type": "dropdown",
+                                                        "label": "Style",
+                                                        "pairs_as_string": true,
+                                                        "pairs": "[  {\"name\" : \"Light\", \"value\" : 0 },{\"name\" : \"Dark\", \"value\" : 1 },{\"name\" : \"Dim\", \"value\" : 2 },{\"name\" : \"Blueprint\", \"value\" : 3 }]"
+                                                    },
+                                                    {
+                                                        "name": "ta_base_url",
+                                                        "type": "text",
+                                                        "label": "Base URL for TelegramAgentServer",
+                                                        "placeholder": "http://localhost:3300/v1"
+                                                    },
+                                                    {
+                                                        "name": "ta_command",
+                                                        "type": "dropdown",
+                                                        "label": "Agent Command",
+                                                        "pairs_as_string": true,
+                                                        "pairs": "[  {\"name\" : \"getLatestTweet\", \"value\" : \"getLatestTweet\" },{\"name\" : \"getTweets\", \"value\" : \"getTweets\" },{\"name\" : \"getTweetsAndReplies\", \"value\" : \"getTweetsAndReplies\" },{\"name\" : \"fetchListTweets\", \"value\" : \"fetchListTweets\" }]"
+                                                    },
+                                                    {
+                                                        "name": "ta_arg",
+                                                        "type": "text",
+                                                        "label": "Telegram User/List ID",
+                                                        "placeholder": ""
+                                                    },
+                                                    {
+                                                        "name": "ta_count",
+                                                        "type": "text",
+                                                        "label": "Count",
+                                                        "placeholder": ""
+                                                    },
+                                                    {
+                                                        "name": "ta_simple_flag",
+                                                        "type": "dropdown",
+                                                        "label": "Simplified JSON",
+                                                        "pairs_as_string": true,
+                                                        "pairs": "[  {\"name\" : \"true\", \"value\" : true },{\"name\" : \"false\", \"value\" : false }]"
+                                                    },
+                                                    {
+                                                        "name": "ta_check_interval",
+                                                        "type": "text",
+                                                        "label": "Time between checks (seconds)",
+                                                        "placeholder": "300"
+                                                    },
+                                                    {
+                                                        "name": "ta_swarm",
+                                                        "type": "text",
+                                                        "label": "Swarm to publish to",
+                                                        "placeholder": "swarm_name"
+                                                    },
+                                                    {
+                                                        "name": "ta_agent_name",
+                                                        "type": "text",
+                                                        "label": "Agent Name to publish as",
+                                                        "placeholder": "some_agent_name"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "success": [
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "ta_last_update",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "value",
+                                            "arg": "0"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "set_value",
+                                    "isServer": true,
+                                    "args": {
+                                        "variable": "ta_template_name",
+                                        "value": "AGENT:${ta_desc}"
+                                    }
+                                },
+                                {
+                                    "operation": "if_then_else",
+                                    "isServer": true,
+                                    "args": {
+                                        "condition": "${ta_swarm_connected}",
+                                        "success": [
+                                            {
+                                                "operation": "if_then_else",
+                                                "isServer": true,
+                                                "args": {
+                                                    "condition": "\"${old_swarm}\" != \"${ta_swarm}\"",
+                                                    "success": [
+                                                        {
+                                                            "operation": "swarm_command",
+                                                            "isServer": true,
+                                                            "args": {
+                                                                "command": "leave",
+                                                                "command_args": {
+                                                                    "topic": "${old_swarm}"
+                                                                }
+                                                            }
+                                                        }
+                                                    ],
+                                                    "failure": [
+                                                        {
+                                                            "operation": "swarm_command",
+                                                            "isServer": true,
+                                                            "args": {
+                                                                "command": "join",
+                                                                "command_args": {
+                                                                    "topic": "${ta_swarm}",
+                                                                    "alias": "${process_diagram_id}",
+                                                                    "webhook": "swarm_hook",
+                                                                    "seed": ""
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ],
+                                        "failure": []
+                                    }
+                                },
+                                {
+                                    "operation": "trigger_pd",
+                                    "isServer": true,
+                                    "args": {
+                                        "pd_id": "${process_diagram_id}",
+                                        "trigger_name": "set_style",
+                                        "sync": true,
+                                        "copyOutputs": true,
+                                        "args": "{\"ex_style\":\"${ex_style}\"}"
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

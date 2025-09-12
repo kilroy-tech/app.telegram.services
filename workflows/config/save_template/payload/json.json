@@ -1,0 +1,92 @@
+{
+    "name": "telegram.services/config/save_template",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "guid",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "ta_template_guid"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "settings",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "app_settings",
+                                "arg": null
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "settings",
+                            "push_array_name": null,
+                            "field_name": "${guid}",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "webhook_args"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "app_services",
+                        "isServer": true,
+                        "args": {
+                            "cmd": "save_app_settings",
+                            "settings": {
+                                "type": "variable",
+                                "arg": "settings"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

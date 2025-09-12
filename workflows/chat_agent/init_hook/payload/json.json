@@ -1,0 +1,135 @@
+{
+    "name": "telegram.services/chat_agent/init_hook",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_.*",
+        "ex_.*",
+        "ai_.*",
+        "wf_.*",
+        "inject_.*",
+        "swarm_.*"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_alias",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "tconfig",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "config"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "trigger_pd",
+                        "isServer": true,
+                        "args": {
+                            "pd_id": "${process_diagram_id}",
+                            "trigger_name": "set_config",
+                            "sync": true,
+                            "copyOutputs": true,
+                            "args": "${tconfig}"
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_template_name",
+                            "value": "BOT: ${ta_agent_name}: ${ta_desc}"
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_connected_color",
+                            "value": "#FFFFFF"
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_swarm_connected",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": true
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_msg",
+                            "value": "Initializing agent data..."
+                        }
+                    },
+                    {
+                        "operation": "trigger_pd",
+                        "isServer": true,
+                        "args": {
+                            "pd_id": "${process_diagram_id}",
+                            "trigger_name": "resume_hook",
+                            "sync": true,
+                            "copyOutputs": true,
+                            "args": "${tconfig}"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

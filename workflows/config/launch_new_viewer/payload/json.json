@@ -1,0 +1,224 @@
+{
+    "name": "telegram.services/config/launch_new_viewer",
+    "version": "1",
+    "description": "",
+    "isInteractive": true,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_*",
+        "ex_*"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": true,
+                "canTerminate": true,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_template_guid",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "current_time",
+                                "arg": "x"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "ta_template_kind",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": "VIEWER"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": {}
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_desc",
+                            "var_expr": {
+                                "type": "value",
+                                "arg": ""
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ex_style",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ex_style"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_swarm",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_swarm"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "ta_agent_name",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_agent_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "display_inline_form",
+                        "isServer": false,
+                        "args": {
+                            "formID": "default",
+                            "form": {
+                                "formPanels": [
+                                    {
+                                        "name": "Configure New Telegram Viewer...",
+                                        "description": "",
+                                        "sections": [
+                                            {
+                                                "fields": [
+                                                    {
+                                                        "name": "ta_desc",
+                                                        "type": "text",
+                                                        "label": "Description",
+                                                        "placeholder": ""
+                                                    },
+                                                    {
+                                                        "name": "ex_style",
+                                                        "type": "dropdown",
+                                                        "label": "Style",
+                                                        "pairs_as_string": true,
+                                                        "pairs": "[  {\"name\" : \"Light\", \"value\" : 0 },{\"name\" : \"Dark\", \"value\" : 1 },{\"name\" : \"Dim\", \"value\" : 2 },{\"name\" : \"Blueprint\", \"value\" : 3 }]"
+                                                    },
+                                                    {
+                                                        "name": "ta_swarm",
+                                                        "type": "text",
+                                                        "label": "Swarm to subscribe to",
+                                                        "placeholder": "swarm_name"
+                                                    },
+                                                    {
+                                                        "name": "ta_agent_name",
+                                                        "type": "text",
+                                                        "label": "Agent Name to listen for",
+                                                        "placeholder": "some_agent_name"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "success": [
+                                {
+                                    "operation": "app_services",
+                                    "isServer": true,
+                                    "args": {
+                                        "cmd": "start_app_diagram",
+                                        "pdclass": "viewer",
+                                        "pdalias": "",
+                                        "pddesc": "${ta_template_kind}:${ta_desc}",
+                                        "pdargs": "{\"ta_desc\":\"${ta_desc}\",\"ta_template_guid\":\"${ta_template_guid}\",\"ex_style\":\"${ex_style}\",\"ta_swarm\":\"${ta_swarm}\",\"ta_agent_name\":\"${ta_agent_name}\"}"
+                                    }
+                                },
+                                {
+                                    "operation": "set_var_to",
+                                    "isServer": true,
+                                    "args": {
+                                        "var_name": "res",
+                                        "push_array_name": null,
+                                        "field_name": null,
+                                        "var_expr": {
+                                            "type": "results",
+                                            "arg": "__results__"
+                                        }
+                                    }
+                                },
+                                {
+                                    "operation": "app_services",
+                                    "isServer": false,
+                                    "args": {
+                                        "cmd": "show_app_diagram",
+                                        "pdalias": "${res}"
+                                    }
+                                },
+                                {
+                                    "operation": "set_value",
+                                    "isServer": true,
+                                    "args": {
+                                        "variable": "ta_msg",
+                                        "value": "Launched viewer as ${ta_desc}"
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

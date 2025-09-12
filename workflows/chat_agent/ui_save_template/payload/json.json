@@ -1,0 +1,108 @@
+{
+    "name": "telegram.services/chat_agent/ui_save_template",
+    "version": "1",
+    "description": "",
+    "isInteractive": true,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "*",
+                "message": "",
+                "timer": "24",
+                "isInteractive": true,
+                "canTerminate": true,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "value",
+                                "arg": {}
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "formData",
+                            "push_array_name": null,
+                            "field_name": "template_name",
+                            "var_expr": {
+                                "type": "variable",
+                                "arg": "ta_template_name"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "display_inline_form",
+                        "isServer": false,
+                        "args": {
+                            "formID": "default",
+                            "form": {
+                                "formPanels": [
+                                    {
+                                        "name": "Save template...",
+                                        "description": "Please enter details for this ${ta_id} template",
+                                        "sections": [
+                                            {
+                                                "fields": [
+                                                    {
+                                                        "name": "template_name",
+                                                        "type": "text",
+                                                        "label": "Template Name",
+                                                        "placeholder": ""
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "success": [
+                                {
+                                    "operation": "trigger_pd",
+                                    "isServer": true,
+                                    "args": {
+                                        "pd_id": "telegram.services.config",
+                                        "trigger_name": "save_template",
+                                        "sync": false,
+                                        "copyOutputs": false,
+                                        "args": "{\"ta_template_name\":\"${template_name}\",\"ta_desc\":\"${ta_desc}\",\"ta_base_url\":\"${ta_base_url}\",\"ta_command\":\"${ta_command}\",\"ta_arg\":\"${ta_arg}\",\"ta_count\":\"${ta_count}\",\"ta_simple_flag\":\"${ta_simple_flag}\",\"ta_template_guid\":\"${ta_template_guid}\",\"ta_check_interval\":\"${ta_check_interval}\",\"ex_style\":\"${ex_style}\",\"ta_swarm\":\"${ta_swarm}\",\"ta_agent_name\":\"${ta_agent_name}\"}"
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}

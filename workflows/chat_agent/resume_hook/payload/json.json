@@ -1,0 +1,140 @@
+{
+    "name": "telegram.services/chat_agent/resume_hook",
+    "version": "1",
+    "description": "",
+    "isInteractive": false,
+    "clean_up": true,
+    "inputs": [],
+    "outputs": [
+        "ta_connected_color",
+        "ta_msg"
+    ],
+    "args": {
+        "role": "*"
+    },
+    "steps": [
+        {
+            "operation": "set_value",
+            "isServer": true,
+            "args": {
+                "variable": "wfCleanupFlag",
+                "value": "1"
+            }
+        },
+        {
+            "operation": "step_group",
+            "isServer": true,
+            "args": {
+                "role": "system",
+                "message": "",
+                "timer": "24",
+                "isInteractive": false,
+                "canTerminate": false,
+                "success": [
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "recswarm",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "agent_rec_swarm"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "sendswarm",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "agent_send_swarm"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
+                            "var_name": "alias",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "agent_alias"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "if_then_else",
+                        "isServer": true,
+                        "args": {
+                            "condition": "\"${recswarm}\" != \"\"",
+                            "success": [
+                                {
+                                    "operation": "swarm_command",
+                                    "isServer": true,
+                                    "args": {
+                                        "command": "join",
+                                        "command_args": {
+                                            "topic": "${recswarm}",
+                                            "alias": "${alias}",
+                                            "webhook": "swarm_hook",
+                                            "seed": ""
+                                        }
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    },
+                    {
+                        "operation": "if_then_else",
+                        "isServer": true,
+                        "args": {
+                            "condition": "(\"${sendswarm}\" != \"${recswarm}\") && (\"${sendswarm}\"!=\"\")",
+                            "success": [
+                                {
+                                    "operation": "swarm_command",
+                                    "isServer": true,
+                                    "args": {
+                                        "command": "join",
+                                        "command_args": {
+                                            "topic": "${sendswarm}",
+                                            "alias": "${alias}",
+                                            "webhook": "null_swarm_hook",
+                                            "seed": ""
+                                        }
+                                    }
+                                }
+                            ],
+                            "failure": []
+                        }
+                    },
+                    {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "ta_connected_color",
+                            "value": "#00FF00"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "operation": "end",
+            "isServer": true,
+            "args": null
+        }
+    ],
+    "externalForms": {}
+}
