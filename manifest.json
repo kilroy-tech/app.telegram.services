@@ -11,6 +11,7 @@
     "locked"        : true,
     "override"      : true,
     "hidden"        : false,
+    "start"         : "user_start",
     "pdClasses"     : {
         "config"    : {
             "pdName" : "config",
