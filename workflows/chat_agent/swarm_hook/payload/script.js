@@ -9,14 +9,16 @@
 const MODULE_NAME = "workflow:telegram.services/chat_agent/swarm_hook";
 const debug = require('debug')(MODULE_NAME);
 debug.log = console.info.bind(console); //https://github.com/visionmedia/debug#readme
+const path       = require("path");
 const Promise = require("bluebird"); // jshint ignore:line
 const appRoot = global.REBAR_NAMESPACE.__base; //require ('app-root-path');
 const { Bot } = require("grammy");
 const telegramifyMarkdown = require('telegramify-markdown');
+const { Acquire, Release } = require(path.join(appRoot, "modules/util/critical_section"));
 
 //-----------------------------------------------------
 
-function preflight(authData, wfProxy) {
+async function preflight(authData, wfProxy) {
 	//called before the workflow steps run
     debug ("preflight");
     try {
@@ -40,22 +42,31 @@ debug (`not sending msg to telegram from: ${from}`);
             parse_mode = { parse_mode: "MarkdownV2" };
         }
         
-        debug (`@@@ send to telegram: ${ta_alias}\n${JSON.stringify(wha,null,4)}`)
+        debug (`@@@ send to telegram: ${ta_alias}, md ${use_markdown}\n${JSON.stringify(wha,null,4)}`)
         
         let text = data.args[0].text;
         wfProxy.setGlobalValue ("ta_msg", `Sending: ${text}`);
 //        msg = msg.replace(/([|{\[\]*_~}+)(#>!=\-.])/gm, '\\$1');
         let msg = use_markdown ? telegramifyMarkdown (text) : text;
+        let semaID = `telegram_send_${chat_id}`;
         
-        return bot.bot.api.sendMessage(chat_id, msg, parse_mode).then (m=>{
+        await Acquire (semaID); //prevent concurrency issues with grammy sending too fast to the Telegram bot
+        debug (`acquired ${semaID}`);
+        return bot.bot.api.sendMessage(chat_id, msg, parse_mode).then (async m=>{
+            await Release (semaID);
+            debug (`released 1 ${semaID}`);
             return Promise.resolve({success: true});
         },
-        r=>{ //rejected! revert to just plain text
+        async r=>{ //rejected! revert to just plain text
             debug (`grammy reject ${r}`);
-            return bot.bot.api.sendMessage(chat_id, text, {}).then (m=>{
+            return bot.bot.api.sendMessage(chat_id, text, {}).then (async m=>{
+                await Release (semaID);
+            debug (`released 2 ${semaID}`);
                 return Promise.resolve({success: true});
             });
         });
+            
+
     }
     catch (err) {
         debug (`error sending ${err}`);

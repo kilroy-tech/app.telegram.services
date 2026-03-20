@@ -3,7 +3,7 @@
     "id"            : "telegram.services",
     "displayName"   : "Telegram Services",
     "desc"          : "Telegram utility services",
-    "version"       : "1.0.1",
+    "version"       : "1.0.2",
     "author"        : "Kilroy.tech",
     "authorInfoUrl" : "http://kilroy.tech",
     "appInfoUrl"    : "/apps/telegram.services/index.pug",

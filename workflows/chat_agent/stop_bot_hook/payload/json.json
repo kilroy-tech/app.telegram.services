@@ -29,40 +29,11 @@
                 "canTerminate": true,
                 "success": [
                     {
-                        "operation": "display_inline_form",
-                        "isServer": false,
+                        "operation": "app_services",
+                        "isServer": true,
                         "args": {
-                            "formID": "default",
-                            "form": {
-                                "formPanels": [
-                                    {
-                                        "name": "Stop Telegram Bot",
-                                        "description": "",
-                                        "sections": [
-                                            {
-                                                "fields": [
-                                                    {
-                                                        "name": "stop",
-                                                        "type": "checkbox",
-                                                        "label": "Stop the bot?"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            "success": [
-                                {
-                                    "operation": "app_services",
-                                    "isServer": true,
-                                    "args": {
-                                        "cmd": "stop_app_diagram",
-                                        "pdalias": "${ta_alias}"
-                                    }
-                                }
-                            ],
-                            "failure": []
+                            "cmd": "stop_app_diagram",
+                            "pdalias": "${ta_alias}"
                         }
                     }
                 ]
