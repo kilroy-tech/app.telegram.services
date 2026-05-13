@@ -75,6 +75,9 @@ function _processMessage (ctx, bot) {
     let text = ctx.message.text;
     let chat_id = ctx.chatId;
     
+    let fromUser = ctx.from.username || "Telegram User";
+//debug (`Telegram From: ${JSON.stringify(ctx.from, null, 4)}`);
+    
     //need to sync up the chatId with the pd context
     let options = {
         method: "POST",
@@ -92,7 +95,7 @@ function _processMessage (ctx, bot) {
     }
 
     //now send the text to the swarm
-    options.body = {text:text};
+    options.body = {text:text, fromUser: fromUser};
     options.uri = KilroyURL + "/swarm_send_hook";
     
     return res.then (x => {

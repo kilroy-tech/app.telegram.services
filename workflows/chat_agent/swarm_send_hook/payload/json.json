@@ -65,6 +65,20 @@
                         "operation": "set_var_to",
                         "isServer": true,
                         "args": {
+                            "var_name": "fromUser",
+                            "push_array_name": null,
+                            "field_name": null,
+                            "var_expr": {
+                                "type": "object",
+                                "arg": "webhook_args",
+                                "field_name": "fromUser"
+                            }
+                        }
+                    },
+                    {
+                        "operation": "set_var_to",
+                        "isServer": true,
+                        "args": {
                             "var_name": "data",
                             "push_array_name": null,
                             "field_name": null,
@@ -160,6 +174,14 @@
                         }
                     },
                     {
+                        "operation": "set_value",
+                        "isServer": true,
+                        "args": {
+                            "variable": "tuser",
+                            "value": "${wf_username}: ${fromUser}"
+                        }
+                    },
+                    {
                         "operation": "set_var_to",
                         "isServer": true,
                         "args": {
@@ -168,7 +190,7 @@
                             "field_name": "username",
                             "var_expr": {
                                 "type": "variable",
-                                "arg": "wf_username"
+                                "arg": "tuser"
                             }
                         }
                     },
