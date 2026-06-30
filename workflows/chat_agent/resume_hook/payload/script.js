@@ -12,6 +12,7 @@ debug.log = console.info.bind(console); //https://github.com/visionmedia/debug#r
 const Promise = require("bluebird"); // jshint ignore:line
 const appRoot = global.REBAR_NAMESPACE.__base; //require ('app-root-path');
 const { Bot } = require("grammy");
+const { autoRetry } = require("@grammyjs/auto-retry");
 const request 	= require ("request-promise");
 const _ 		= require('lodash');
 
@@ -151,12 +152,16 @@ function postflight(authData, wfProxy) {
             rec_swarm: ta_rec_swarm,
             send_swarm: ta_send_swarm,
             alias: ta_alias,
-            use_markdown: ta_use_markdown
+            use_markdown: ta_use_markdown,
+            thinking_sessions: {},
+            thinking_draft_counter: 0
         };
         
         debug (`@@@ starting bot ${JSON.stringify(new_bot, null, 4)}`);
         
         new_bot.bot = new Bot (ta_api_key);
+        // Streaming drafts can burst API calls while LLM deltas arrive.
+        new_bot.bot.api.config.use(autoRetry());
         
         global.REBAR_NAMESPACE.__telegram [ta_alias] = new_bot;
         

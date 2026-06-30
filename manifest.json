@@ -3,7 +3,7 @@
     "id"            : "telegram.services",
     "displayName"   : "Telegram Services",
     "desc"          : "Telegram utility services",
-    "version"       : "1.0.3",
+    "version"       : "1.1.0",
     "author"        : "Kilroy.tech",
     "authorInfoUrl" : "http://kilroy.tech",
     "appInfoUrl"    : "/apps/telegram.services/index.pug",
@@ -11,7 +11,7 @@
     "locked"        : true,
     "override"      : true,
     "hidden"        : false,
-    "start"         : "user_start",
+    "start"         : "start_on_launch",
     "pdClasses"     : {
         "config"    : {
             "pdName" : "config",
