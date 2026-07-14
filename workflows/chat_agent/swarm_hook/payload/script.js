@@ -18,12 +18,70 @@ const { Acquire, Release } = require(path.join(appRoot, "modules/util/critical_s
 
 const THINKING_PHASE_VALUES = new Set(["START", "DELTA", "END"]);
 const THINKING_HEADER = "**Thinking...**";
+const TELEGRAM_TEXT_HARD_LIMIT = 4096;
+const TELEGRAM_RICH_HARD_LIMIT = 32768;
+const THINKING_TEXT_SAFE_LIMIT = 3000;
+const THINKING_RICH_STREAM_SAFE_LIMIT = 30000;
 
 function _isMessageNotModifiedError(err) {
     const text = (err && (err.description || err.message || err.toString))
         ? String(err.description || err.message || err.toString())
         : "";
     return text.toLowerCase().includes("message is not modified");
+}
+
+function _isMessageTooLongError(err) {
+    const text = (err && (err.description || err.message || err.toString))
+        ? String(err.description || err.message || err.toString())
+        : "";
+    return text.toLowerCase().includes("message is too long");
+}
+
+function _isMessageEditTargetMissingError(err) {
+    const text = (err && (err.description || err.message || err.toString))
+        ? String(err.description || err.message || err.toString())
+        : "";
+    const lower = text.toLowerCase();
+    return lower.includes("message to edit not found") || lower.includes("message can't be edited");
+}
+
+function _splitTextIntoChunks(text, maxChars) {
+    const input = (text || "").toString();
+    const limit = Math.max(1, Math.min(maxChars || THINKING_TEXT_SAFE_LIMIT, TELEGRAM_TEXT_HARD_LIMIT));
+    const chunks = [];
+    let remaining = input;
+
+    while (remaining.length > limit) {
+        let cut = remaining.lastIndexOf("\n", limit);
+        if (cut < Math.floor(limit * 0.5)) {
+            cut = remaining.lastIndexOf(" ", limit);
+        }
+        if (cut <= 0) {
+            cut = limit;
+        }
+        chunks.push(remaining.slice(0, cut));
+        remaining = remaining.slice(cut);
+        if (remaining.startsWith("\n") || remaining.startsWith(" ")) {
+            remaining = remaining.slice(1);
+        }
+    }
+
+    if (remaining.length > 0) {
+        chunks.push(remaining);
+    }
+    return chunks;
+}
+
+function _appendThinkingDelta(existingText, deltaText) {
+    const left = (existingText === null || existingText === undefined) ? "" : String(existingText);
+    const right = (deltaText === null || deltaText === undefined) ? "" : String(deltaText);
+    if (!left) return right;
+    if (!right) return left;
+
+    const leftEndsWithWhitespace = /\s$/.test(left);
+    const rightStartsWithWhitespace = /^\s/.test(right);
+    const seam = (leftEndsWithWhitespace || rightStartsWithWhitespace) ? "" : " ";
+    return `${left}${seam}${right}`;
 }
 
 function _parseThinkingCommand(text) {
@@ -51,13 +109,6 @@ function _parseThinkingCommand(text) {
     };
 }
 
-function _previewText(text, maxLen) {
-    const limit = Number(maxLen) > 0 ? Number(maxLen) : 140;
-    const raw = (text || "").toString().replace(/\s+/g, " ").trim();
-    if (raw.length <= limit) return raw;
-    return `${raw.slice(0, limit)}...`;
-}
-
 function _isAcceptedSender(from, agentFilter) {
     const sender = (from || "").toString();
     const filter = (agentFilter || "*").toString().trim();
@@ -73,44 +124,6 @@ function _isAcceptedSender(from, agentFilter) {
     return sender === filter;
 }
 
-function _senderMatchDetails(from, agentFilter) {
-    const sender = (from || "").toString();
-    const filter = (agentFilter || "*").toString().trim();
-
-    if (!filter || filter === "*") {
-        return {
-            accepted: true,
-            mode: "wildcard",
-            sender,
-            filter,
-            expected: "*",
-            reason: "wildcard accepts all senders"
-        };
-    }
-
-    if (filter.startsWith("!")) {
-        const excluded = filter.slice(1).trim();
-        const accepted = !excluded || sender !== excluded;
-        return {
-            accepted,
-            mode: "not-agent",
-            sender,
-            filter,
-            expected: excluded || "(empty)",
-            reason: accepted ? "sender is not excluded" : "sender matched excluded alias"
-        };
-    }
-
-    const accepted = sender === filter;
-    return {
-        accepted,
-        mode: "exact",
-        sender,
-        filter,
-        expected: filter,
-        reason: accepted ? "sender matched exact alias" : "sender did not match exact alias"
-    };
-}
 
 function _createTextQueue() {
     const items = [];
@@ -161,6 +174,9 @@ async function _sendMarkdownOrPlain(botData, chat_id, text) {
         const mdText = telegramifyMarkdown(text || "");
         return await botData.bot.api.sendMessage(chat_id, mdText, { parse_mode: "MarkdownV2" });
     } catch (err) {
+        if (_isMessageTooLongError(err)) {
+            throw err;
+        }
         debug(`markdown send fallback: ${err}`);
         return botData.bot.api.sendMessage(chat_id, text || "", {});
     }
@@ -175,6 +191,9 @@ async function _editMarkdownOrPlain(botData, chat_id, message_id, text) {
             debug(`markdown edit no-op (not modified) msg_id=${message_id}`);
             return null;
         }
+        if (_isMessageTooLongError(err)) {
+            throw err;
+        }
         debug(`markdown edit fallback: ${err}`);
         try {
             return await botData.bot.api.editMessageText(chat_id, message_id, text || "", {});
@@ -183,31 +202,133 @@ async function _editMarkdownOrPlain(botData, chat_id, message_id, text) {
                 debug(`plain edit no-op (not modified) msg_id=${message_id}`);
                 return null;
             }
+            if (_isMessageTooLongError(plainErr)) {
+                throw plainErr;
+            }
             throw plainErr;
         }
     }
 }
 
-async function _upsertThinkingFallbackMessage(botData, chat_id, session) {
+async function _upsertThinkingFallbackMessages(botData, chat_id, session) {
     const text = session.full_text || "";
     if (!text) return;
 
-    if (!session.fallback_message_id) {
-        const sent = await _sendMarkdownOrPlain(botData, chat_id, text);
-        session.fallback_message_id = sent && sent.message_id;
-        return;
+    const chunks = _splitTextIntoChunks(text, THINKING_TEXT_SAFE_LIMIT);
+    if (!Array.isArray(session.fallback_message_ids)) {
+        session.fallback_message_ids = [];
+    }
+    if (!Array.isArray(session.fallback_chunk_texts)) {
+        session.fallback_chunk_texts = [];
+    }
+    const ids = session.fallback_message_ids;
+
+    for (let i = 0; i < chunks.length; i += 1) {
+        const chunk = chunks[i];
+        const existingId = ids[i];
+
+        if (!existingId) {
+            const sent = await _sendMarkdownOrPlain(botData, chat_id, chunk);
+            ids[i] = sent && sent.message_id;
+            continue;
+        }
+
+        try {
+            await _editMarkdownOrPlain(botData, chat_id, existingId, chunk);
+        } catch (err) {
+            if (_isMessageEditTargetMissingError(err)) {
+                const sent = await _sendMarkdownOrPlain(botData, chat_id, chunk);
+                ids[i] = sent && sent.message_id;
+            } else {
+                throw err;
+            }
+        }
     }
 
-    await _editMarkdownOrPlain(botData, chat_id, session.fallback_message_id, text);
+    if (ids.length > chunks.length) {
+        const stale = ids.slice(chunks.length);
+        ids.length = chunks.length;
+        for (const message_id of stale) {
+            if (!message_id) continue;
+            try {
+                await botData.bot.api.deleteMessage(chat_id, message_id);
+            } catch (err) {
+                debug(`thinking_cleanup_stale_delete_failed message_id=${message_id} err=${err}`);
+            }
+        }
+    }
+
+    session.fallback_chunk_texts = chunks.slice();
+    session.fallback_initialized = true;
+    session.fallback_message_id = ids.length > 0 ? ids[ids.length - 1] : null;
+}
+
+async function _appendThinkingFallbackDelta(botData, chat_id, session, deltaText) {
+    const delta = (deltaText || "").toString();
+    if (!delta) return;
+
+    if (!Array.isArray(session.fallback_message_ids)) {
+        session.fallback_message_ids = [];
+    }
+    if (!Array.isArray(session.fallback_chunk_texts)) {
+        session.fallback_chunk_texts = [];
+    }
+
+    const ids = session.fallback_message_ids;
+    const chunkTexts = session.fallback_chunk_texts;
+    const changed = new Set();
+    let remaining = delta;
+
+    while (remaining.length > 0) {
+        if (chunkTexts.length < 1 || chunkTexts[chunkTexts.length - 1].length >= THINKING_TEXT_SAFE_LIMIT) {
+            chunkTexts.push("");
+            ids.push(null);
+        }
+
+        const idx = chunkTexts.length - 1;
+        const room = THINKING_TEXT_SAFE_LIMIT - chunkTexts[idx].length;
+        if (room <= 0) {
+            continue;
+        }
+
+        const part = remaining.slice(0, room);
+        chunkTexts[idx] += part;
+        remaining = remaining.slice(part.length);
+        changed.add(idx);
+    }
+
+    const ordered = Array.from(changed).sort((a, b) => a - b);
+    for (const idx of ordered) {
+        const chunk = chunkTexts[idx] || "";
+        const existingId = ids[idx];
+        if (!existingId) {
+            const sent = await _sendMarkdownOrPlain(botData, chat_id, chunk);
+            ids[idx] = sent && sent.message_id;
+            continue;
+        }
+
+        try {
+            await _editMarkdownOrPlain(botData, chat_id, existingId, chunk);
+        } catch (err) {
+            if (_isMessageEditTargetMissingError(err)) {
+                const sent = await _sendMarkdownOrPlain(botData, chat_id, chunk);
+                ids[idx] = sent && sent.message_id;
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    session.fallback_initialized = true;
+    session.fallback_message_id = ids.length > 0 ? ids[ids.length - 1] : null;
 }
 
 async function _sendThinkingHeader(botData, chat_id, key) {
     try {
         const sent = await _sendMarkdownOrPlain(botData, chat_id, THINKING_HEADER);
-        debug(`thinking_header_sent key=${key} msg_id=${sent && sent.message_id ? sent.message_id : ""}`);
         return sent;
     } catch (err) {
-        debug(`thinking_header_send_failed key=${key} err=${err}`);
+        debug(`thinking header send failed for ${key}: ${err}`);
         return null;
     }
 }
@@ -235,10 +356,12 @@ async function _deleteThinkingMessages(botData, chat_id, session, key) {
     const ids = [];
     if (session.header_message_id) ids.push(session.header_message_id);
     if (session.fallback_message_id) ids.push(session.fallback_message_id);
+    if (Array.isArray(session.fallback_message_ids) && session.fallback_message_ids.length > 0) {
+        ids.push(...session.fallback_message_ids);
+    }
     if (session.stream_message_id) ids.push(session.stream_message_id);
 
     if (ids.length === 0) {
-        debug(`thinking_cleanup_no_messages key=${key}`);
         return;
     }
 
@@ -260,7 +383,6 @@ async function _startThinkingStream(botData, chat_id, key, session) {
         const finalMsg = await streamer.streamMarkdown(chat_id, draft_id, session.queue.stream());
         session.stream_message_id = finalMsg && finalMsg.message_id ? finalMsg.message_id : null;
         session.stream_completed = true;
-        debug(`thinking_stream_complete key=${key} message_id=${session.stream_message_id || ""} done=${session.done}`);
         if (session.done) {
             await _deleteThinkingMessages(botData, chat_id, session, key);
             _cleanupThinkingSession(botData, key);
@@ -270,7 +392,7 @@ async function _startThinkingStream(botData, chat_id, key, session) {
         session.mode = "fallback";
         session.stream_completed = true;
         try {
-            await _upsertThinkingFallbackMessage(botData, chat_id, session);
+            await _upsertThinkingFallbackMessages(botData, chat_id, session);
         } catch (fallbackErr) {
             debug(`fallback send failed for ${key}: ${fallbackErr}`);
         }
@@ -295,7 +417,6 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
     }
 
     if (!session && thinking.phase === "END") {
-        debug(`thinking_end_without_session key=${key}`);
         return;
     }
 
@@ -306,6 +427,9 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
             full_text: "",
             done: false,
             fallback_message_id: null,
+            fallback_message_ids: [],
+            fallback_chunk_texts: [],
+            fallback_initialized: false,
             stream_message_id: null,
             stream_completed: false,
             header_sent: false,
@@ -315,16 +439,41 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
         const headerSent = await _sendThinkingHeader(botData, chat_id, key);
         session.header_sent = true;
         session.header_message_id = headerSent && headerSent.message_id ? headerSent.message_id : null;
-        debug(`thinking_session_start key=${key} header_len=${THINKING_HEADER.length}`);
         session.stream_promise = _startThinkingStream(botData, chat_id, key, session);
     }
 
     if (thinking.text) {
-        session.full_text += thinking.text;
+        const priorText = session.full_text || "";
+        const nextText = _appendThinkingDelta(priorText, thinking.text);
+        const appendedSegment = nextText.slice(priorText.length);
+        session.full_text = nextText;
         if (session.mode === "stream") {
-            session.queue.push(thinking.text);
+            if (session.full_text.length <= THINKING_RICH_STREAM_SAFE_LIMIT) {
+                if (appendedSegment) {
+                    session.queue.push(appendedSegment);
+                }
+            } else {
+                session.mode = "fallback";
+                session.queue.end();
+                if (session.stream_promise) {
+                    await session.stream_promise;
+                }
+                if (session.stream_message_id) {
+                    try {
+                        await botData.bot.api.deleteMessage(chat_id, session.stream_message_id);
+                    } catch (err) {
+                        debug(`thinking_stream_message_delete_failed key=${key} message_id=${session.stream_message_id} err=${err}`);
+                    }
+                    session.stream_message_id = null;
+                }
+                await _upsertThinkingFallbackMessages(botData, chat_id, session);
+            }
         } else {
-            await _upsertThinkingFallbackMessage(botData, chat_id, session);
+            if (!session.fallback_initialized) {
+                await _upsertThinkingFallbackMessages(botData, chat_id, session);
+            } else if (appendedSegment) {
+                await _appendThinkingFallbackDelta(botData, chat_id, session, appendedSegment);
+            }
         }
     }
 
@@ -339,7 +488,7 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
                 _cleanupThinkingSession(botData, key);
             }
         } else {
-            await _upsertThinkingFallbackMessage(botData, chat_id, session);
+            await _upsertThinkingFallbackMessages(botData, chat_id, session);
             await _deleteThinkingMessages(botData, chat_id, session, key);
             _cleanupThinkingSession(botData, key);
         }
@@ -347,18 +496,34 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
 }
 
 async function _sendNormalMessage(botData, chat_id, use_markdown, text) {
-    const parse_mode = use_markdown ? { parse_mode: "MarkdownV2" } : {};
-    const msg = use_markdown ? telegramifyMarkdown(text || "") : (text || "");
+    const rawText = (text || "").toString();
+    const chunks = _splitTextIntoChunks(rawText, THINKING_TEXT_SAFE_LIMIT);
     const semaID = `telegram_send_${chat_id}`;
 
     await Acquire(semaID);
     debug(`acquired ${semaID}`);
 
     try {
-        await botData.bot.api.sendMessage(chat_id, msg, parse_mode);
-    } catch (err) {
-        debug(`grammy reject ${err}`);
-        await botData.bot.api.sendMessage(chat_id, text || "", {});
+        for (const chunk of chunks) {
+            if (!chunk) continue;
+
+            if (use_markdown) {
+                try {
+                    const mdChunk = telegramifyMarkdown(chunk);
+                    await botData.bot.api.sendMessage(chat_id, mdChunk, { parse_mode: "MarkdownV2" });
+                    continue;
+                } catch (err) {
+                    debug(`grammy reject markdown chunk ${err}`);
+                }
+            }
+
+            // Fallback to plain text for this chunk; split again at hard limit as final guardrail.
+            const plainChunks = _splitTextIntoChunks(chunk, TELEGRAM_TEXT_HARD_LIMIT);
+            for (const plainChunk of plainChunks) {
+                if (!plainChunk) continue;
+                await botData.bot.api.sendMessage(chat_id, plainChunk, {});
+            }
+        }
     } finally {
         await Release(semaID);
         debug(`released ${semaID}`);
@@ -369,7 +534,7 @@ async function _sendNormalMessage(botData, chat_id, use_markdown, text) {
 
 async function preflight(authData, wfProxy) {
 	//called before the workflow steps run
-    debug ("preflight");
+//    debug ("preflight");
     try {
         let wha = wfProxy.getGlobalValue ("webhook_args") || {};
         let data = JSON.parse (wha.data || "{}");
@@ -388,39 +553,34 @@ async function preflight(authData, wfProxy) {
         let use_markdown = botData.use_markdown;
 
         const argsList = Array.isArray(data.args) ? data.args : [];
-        const matchInfo = _senderMatchDetails(from, ta_agent_from);
-        debug(`sender_filter mode=${matchInfo.mode} sender="${matchInfo.sender}" filter="${matchInfo.filter}" expected="${matchInfo.expected}" accepted=${matchInfo.accepted} reason="${matchInfo.reason}" args_count=${argsList.length}`);
-
-        if (!matchInfo.accepted) {
-            const rejectedPreview = (argsList.length > 0 && argsList[0] && argsList[0].text) ? _previewText(argsList[0].text, 180) : "";
-            debug(`sender_filter_reject sender="${matchInfo.sender}" filter="${matchInfo.filter}" first_message_preview="${rejectedPreview}"`);
+        if (!_isAcceptedSender(from, ta_agent_from)) {
+            debug (`not sending msg to telegram from: ${from}, filter: ${ta_agent_from}`);
             return Promise.resolve({success: true});
         }
         
-        debug (`@@@ send to telegram: ${ta_alias}, md ${use_markdown}\n${JSON.stringify(wha,null,4)}`)
-
         for (const msgObj of argsList) {
             const text = (msgObj && msgObj.text) ? String(msgObj.text) : "";
             if (!text) continue;
 
-            debug(`message_in sender="${from}" preview="${_previewText(text, 180)}"`);
-
             const thinking = _parseThinkingCommand(text);
             if (thinking) {
-                debug(`message_route route=thinking phase=${thinking.phase} turn_id="${thinking.turn_id}" delta_len=${(thinking.text || "").length}`);
-                await _handleThinkingMessage(botData, chat_id, from, thinking);
+                const thinkingLockKey = `telegram_thinking_${chat_id}_${thinking.turn_id || from}`;
+                await Acquire(thinkingLockKey);
+                try {
+                    await _handleThinkingMessage(botData, chat_id, from, thinking);
+                } finally {
+                    await Release(thinkingLockKey);
+                }
                 wfProxy.setGlobalValue("ta_msg", `Thinking ${thinking.phase}${thinking.turn_id ? (" " + thinking.turn_id) : ""}`);
                 continue;
             }
 
             // Suppress slash commands we do not explicitly support in Telegram.
             if (text.trim().startsWith("/")) {
-                debug(`message_route route=slash_reject sender="${from}" preview="${_previewText(text, 180)}"`);
                 wfProxy.setGlobalValue("ta_msg", "Ignored unsupported slash command");
                 continue;
             }
 
-            debug(`message_route route=normal_send sender="${from}" markdown=${use_markdown}`);
             wfProxy.setGlobalValue ("ta_msg", `Sending: ${text}`);
             await _sendNormalMessage(botData, chat_id, use_markdown, text);
         }
@@ -485,7 +645,6 @@ function end (authData, wfProxy, step, formData) {
 //-----------------------------------------------------
 
 function postflight(authData, wfProxy) {
-    debug ("postflight");
     return Promise.resolve({success: true});
 }
 
