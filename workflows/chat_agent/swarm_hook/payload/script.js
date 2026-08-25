@@ -22,6 +22,8 @@ const TELEGRAM_TEXT_HARD_LIMIT = 4096;
 const TELEGRAM_RICH_HARD_LIMIT = 32768;
 const THINKING_TEXT_SAFE_LIMIT = 3000;
 const THINKING_RICH_STREAM_SAFE_LIMIT = 30000;
+// Straggler deltas for an already-ended turn are dropped for this long after cleanup.
+const THINKING_FINISHED_TTL_MS = 5 * 60 * 1000;
 
 function _isMessageNotModifiedError(err) {
     const text = (err && (err.description || err.message || err.toString))
@@ -345,9 +347,45 @@ function _ensureThinkingSessionMap(botData) {
     return botData.thinking_sessions;
 }
 
+function _ensureThinkingFinishedMap(botData) {
+    if (!botData.thinking_finished || typeof botData.thinking_finished !== "object") {
+        botData.thinking_finished = {};
+    }
+    return botData.thinking_finished;
+}
+
+function _markThinkingTurnFinished(botData, key) {
+    const finished = _ensureThinkingFinishedMap(botData);
+    const now = Date.now();
+    finished[key] = now;
+
+    for (const finishedKey of Object.keys(finished)) {
+        if (now - finished[finishedKey] > THINKING_FINISHED_TTL_MS) {
+            delete finished[finishedKey];
+        }
+    }
+}
+
+function _isThinkingTurnFinished(botData, key) {
+    const finished = _ensureThinkingFinishedMap(botData);
+    const endedAt = finished[key];
+    if (!endedAt) return false;
+    if (Date.now() - endedAt > THINKING_FINISHED_TTL_MS) {
+        delete finished[key];
+        return false;
+    }
+    return true;
+}
+
+function _clearThinkingTurnFinished(botData, key) {
+    const finished = _ensureThinkingFinishedMap(botData);
+    delete finished[key];
+}
+
 function _cleanupThinkingSession(botData, key) {
     const sessions = _ensureThinkingSessionMap(botData);
     delete sessions[key];
+    _markThinkingTurnFinished(botData, key);
 }
 
 async function _deleteThinkingMessages(botData, chat_id, session, key) {
@@ -414,6 +452,12 @@ async function _handleThinkingMessage(botData, chat_id, from, thinking) {
             if (session.queue) session.queue.end();
         }
         session = null;
+        _clearThinkingTurnFinished(botData, key);
+    }
+
+    if (!session && _isThinkingTurnFinished(botData, key)) {
+        debug(`thinking_late_message_dropped key=${key} phase=${thinking.phase}`);
+        return;
     }
 
     if (!session && thinking.phase === "END") {
@@ -564,7 +608,8 @@ async function preflight(authData, wfProxy) {
 
             const thinking = _parseThinkingCommand(text);
             if (thinking) {
-                const thinkingLockKey = `telegram_thinking_${chat_id}_${thinking.turn_id || from}`;
+                // Same lock as normal sends so thinking and final answers stay in arrival order.
+                const thinkingLockKey = `telegram_send_${chat_id}`;
                 await Acquire(thinkingLockKey);
                 try {
                     await _handleThinkingMessage(botData, chat_id, from, thinking);

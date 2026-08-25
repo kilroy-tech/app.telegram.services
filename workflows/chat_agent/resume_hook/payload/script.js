@@ -154,6 +154,7 @@ function postflight(authData, wfProxy) {
             alias: ta_alias,
             use_markdown: ta_use_markdown,
             thinking_sessions: {},
+            thinking_finished: {},
             thinking_draft_counter: 0
         };
         
